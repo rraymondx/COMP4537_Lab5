@@ -65,33 +65,53 @@ const server = http.createServer((req, res) => {
                 }
             });
         });
-    } else if (path === '/query' && method === 'POST') {
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-        req.on('end', () => {
-            const { query } = JSON.parse(body);
-            if (!query.startsWith('SELECT') && !query.startsWith('INSERT')) {
-                res.writeHead(403, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Only SELECT and INSERT queries are allowed' }));
-                return;
-            }
-            connection.query(query, (err, results) => {
-                if (err) {
-                    res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'Query execution failed' }));
-                } else {
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify(results));
-                }
+    } else if (path === '/query' && (method === 'POST' || method === 'GET')) {
+        let query = '';
+
+        if (method === 'GET') {
+            query = parsedUrl.query.query; // Get query from URL parameter
+        } else {
+            let body = '';
+            req.on('data', chunk => {
+                body += chunk.toString();
             });
-        });
+            req.on('end', () => {
+                try {
+                    query = JSON.parse(body).query;
+                } catch (error) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Invalid JSON' }));
+                    return;
+                }
+                executeQuery(query, res);
+            });
+            return;
+        }
+
+        executeQuery(query, res);
     } else {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not Found');
     }
 });
+
+function executeQuery(query, res) {
+    if (!query || (!query.startsWith('SELECT') && !query.startsWith('INSERT'))) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Only SELECT and INSERT queries are allowed' }));
+        return;
+    }
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Query execution failed' }));
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(results));
+        }
+    });
+}
 
 server.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
