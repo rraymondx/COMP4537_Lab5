@@ -1,4 +1,8 @@
+
+//Gets the insert button
 document.getElementById('insertButton').addEventListener('click', () => {
+
+    //Post request to website
     fetch('http://localhost:3000/insert', {
         method: 'POST'
     })
