@@ -54,18 +54,35 @@ const server = http.createServer((req, res) => {
         req.on('data', chunk => {
             body += chunk.toString();
         });
+    
         req.on('end', () => {
-            const insertQuery = `INSERT INTO my_table (name) VALUES ('Sample Name')`;
-            connection.query(insertQuery, (err, results) => {
-                if (err) {
-                    res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'Failed to insert data' }));
-                } else {
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ message: 'Data inserted successfully' }));
+            try {
+                const { people } = JSON.parse(body);
+    
+                if (!Array.isArray(people) || people.length === 0) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Invalid data format. Expected an array of people.' }));
+                    return;
                 }
-            });
-        });
+    
+                // Prepare bulk insert query
+                const values = people.map(person => [person.name, person.dob]);
+                const insertQuery = `INSERT INTO my_table (name, dob) VALUES ?`;
+    
+                connection.query(insertQuery, [values], (err, results) => {
+                    if (err) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'Failed to insert data', details: err.message }));
+                    } else {
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ message: 'Data inserted successfully', insertedRows: results.affectedRows }));
+                    }
+                });
+            } catch (error) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid JSON format' }));
+            }
+        });    
     } else if (path === '/query' && (method === 'POST' || method === 'GET')) {
         let query = '';
 
