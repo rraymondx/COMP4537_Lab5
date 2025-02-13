@@ -1,7 +1,19 @@
 // Gets the insert button and adds a click event listener
 document.getElementById('insertButton').addEventListener('click', () => {
+    
+    const people = [
+        { name: "Alice Johnson", dob: "1990-05-15" },
+        { name: "Bob Smith", dob: "1985-10-22" },
+        { name: "Charlie Brown", dob: "2000-07-08" },
+        { name: "Diana Ross", dob: "1995-12-30" }
+    ];
+    
     fetch('http://localhost:3000/insert', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ people }) 
     })
     .then(response => response.json())
     .then(data => {
