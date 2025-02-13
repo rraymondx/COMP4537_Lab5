@@ -1,6 +1,6 @@
 const http = require('http');
 const url = require('url');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const dotenv = require('dotenv');
 
 // Load environment variables from .env file
@@ -15,6 +15,7 @@ const connection = mysql.createConnection({
     port: process.env.DB_PORT,
     ssl: process.env.DB_SSL === 'REQUIRED' ? { rejectUnauthorized: false } : null
 });
+
 
 connection.connect(err => {
     if (err) throw err;
