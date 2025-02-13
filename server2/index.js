@@ -1,13 +1,19 @@
 const http = require('http');
 const url = require('url');
 const mysql = require('mysql');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Create a connection to the database
 const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root', // default 
-    password: '', // default
-    database: 'testdb'
+    host: process.env.DB_HOST,
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
+    ssl: process.env.DB_SSL === 'REQUIRED' ? { rejectUnauthorized: false } : null
 });
 
 connection.connect(err => {
@@ -19,7 +25,8 @@ connection.connect(err => {
 const createTableQuery = `
 CREATE TABLE IF NOT EXISTS my_table (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) ENGINE=InnoDB;
+    name VARCHAR(255)
+) ENGINE=InnoDB;
 `;
 
 connection.query(createTableQuery, (err) => {
