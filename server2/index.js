@@ -3,10 +3,8 @@ const url = require('url');
 const mysql = require('mysql2');
 const dotenv = require('dotenv');
 
-// Load environment variables from .env file
 dotenv.config();
 
-// Create a connection to the database
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USERNAME,
@@ -16,13 +14,11 @@ const connection = mysql.createConnection({
     ssl: process.env.DB_SSL === 'REQUIRED' ? { rejectUnauthorized: false } : null
 });
 
-
 connection.connect(err => {
     if (err) throw err;
     console.log('Connected to the database');
 });
 
-// Create the table if it doesn't exist
 const createTableQuery = `
 CREATE TABLE IF NOT EXISTS my_table (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -39,6 +35,18 @@ const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const path = parsedUrl.pathname;
     const method = req.method;
+
+    // Set CORS Headers
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Handle preflight requests
+    if (method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+    }
 
     if (path === '/insert' && method === 'POST') {
         let body = '';
@@ -57,7 +65,7 @@ const server = http.createServer((req, res) => {
                 }
             });
         });
-    } else if (path === '/query' && (method === 'POST' || method === 'GET')) {
+    } else if (path === '/query' && method === 'POST') {
         let body = '';
         req.on('data', chunk => {
             body += chunk.toString();
