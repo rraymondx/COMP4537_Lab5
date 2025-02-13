@@ -3,7 +3,7 @@
 document.getElementById('insertButton').addEventListener('click', () => {
 
     //Post request to website
-    fetch('http://localhost:3000/insert', {
+    fetch('https://comp-4537-lab5-blush.vercel.app/insert', {
         method: 'POST'
     })
     .then(response => response.json())
@@ -15,7 +15,7 @@ document.getElementById('insertButton').addEventListener('click', () => {
 document.getElementById('queryButton').addEventListener('click', () => {
     const query = document.getElementById('queryInput').value;
     const method = query.startsWith('SELECT') ? 'GET' : 'POST';
-    fetch('http://localhost:3000/query', {
+    fetch('https://comp-4537-lab5-blush.vercel.app/query', {
         method: method,
         headers: {
             'Content-Type': 'application/json'
