@@ -22,7 +22,8 @@ connection.connect(err => {
 const createTableQuery = `
 CREATE TABLE IF NOT EXISTS my_table (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255)
+    name VARCHAR(255),
+    dob VARCHAR(255)
 ) ENGINE=InnoDB;
 `;
 
