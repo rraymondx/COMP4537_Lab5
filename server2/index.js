@@ -20,7 +20,8 @@ connection.connect(err => {
 });
 
 const createTableQuery = `
-CREATE TABLE IF NOT EXISTS my_table (
+
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255),
     dob VARCHAR(255)
@@ -67,7 +68,7 @@ const server = http.createServer((req, res) => {
     
                 // Prepare bulk insert query
                 const values = people.map(person => [person.name, person.dob]);
-                const insertQuery = `INSERT INTO my_table (name, dob) VALUES ?`;
+                const insertQuery = `INSERT INTO users (name, dob) VALUES ?`;
     
                 connection.query(insertQuery, [values], (err, results) => {
                     if (err) {
