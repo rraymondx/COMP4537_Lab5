@@ -5,23 +5,23 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// databse connection
-const connection = mysql.createConnection({
+const port = process.env.PORT || 8080;
+
+// Create a MySQL connection pool
+const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
-    ssl: process.env.DB_SSL === 'REQUIRED' ? { rejectUnauthorized: false } : null
+    ssl: process.env.DB_SSL === 'REQUIRED' ? { rejectUnauthorized: false } : null,
+    waitForConnections: true,
+    connectionLimit: 10, // Limit concurrent connections
+    queueLimit: 0
 });
 
-connection.connect(err => {
-    if (err) throw err;
-    console.log('Connected to the database');
-});
-
+// Ensure the database table exists
 const createTableQuery = `
-
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255),
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB;
 `;
 
-connection.query(createTableQuery, (err) => {
+pool.query(createTableQuery, (err) => {
     if (err) throw err;
     console.log('Table created or already exists');
 });
@@ -40,7 +40,7 @@ const server = http.createServer((req, res) => {
     const method = req.method;
 
     // Set CORS Headers
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -71,7 +71,7 @@ const server = http.createServer((req, res) => {
                 const values = people.map(person => [person.name, person.dob]);
                 const insertQuery = `INSERT INTO users (name, dob) VALUES ?`;
     
-                connection.query(insertQuery, [values], (err, results) => {
+                pool.query(insertQuery, [values], (err, results) => {
                     if (err) {
                         res.writeHead(500, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({ error: 'Failed to insert data', details: err.message }));
@@ -122,10 +122,10 @@ function executeQuery(query, res) {
         return;
     }
 
-    connection.query(query, (err, results) => {
+    pool.query(query, (err, results) => {
         if (err) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Query execution failed' }));
+            res.end(JSON.stringify({ error: 'Query execution failed', details: err.message }));
         } else {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(results));
@@ -133,6 +133,6 @@ function executeQuery(query, res) {
     });
 }
 
-server.listen(8080, () => {
-    console.log('Server running on http://localhost:8080');
+server.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
 });
